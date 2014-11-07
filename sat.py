@@ -23,7 +23,7 @@
 import pycosat
 
 
-def interpret(sol=None):
+def interpret(sol=[]):
     installed = []
     not_installed = []
 
