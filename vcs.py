@@ -47,7 +47,7 @@ class VCS(object):
     def clean(self):
         pass
 
-    def call_process(self, cmd=[], cwd=None, show_stdout=None):
+    def call_process(self, cmd=None, cwd=None, show_stdout=None):
         '''idea from pip util'''
         if (show_stdout is None):
             if (hasattr(self, "show_stdout")):

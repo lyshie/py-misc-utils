@@ -23,9 +23,11 @@
 import pycosat
 
 
-def interpret(sol=[]):
+def interpret(sol=None):
     installed = []
     not_installed = []
+
+    sol = sol if (sol) else []
 
     for p in sol:
         if (p > 0):
