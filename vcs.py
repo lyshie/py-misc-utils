@@ -25,14 +25,18 @@ import subprocess
 import argparse
 import logging
 
-logger = logging.getLogger(__name__)
-
 
 class VCS(object):
 
     def __init__(self, path):
         super(VCS, self).__init__()
         self.path = path
+
+    def verbose(self):
+        self.show_stdout = True
+
+    def quiet(self):
+        self.show_stdout = False
 
     def get_desc(self):
         pass
@@ -43,16 +47,22 @@ class VCS(object):
     def clean(self):
         pass
 
-    def call_process(self, cmd=[], cwd=None, show_stdout=False):
+    def call_process(self, cmd=[], cwd=None, show_stdout=None):
         '''idea from pip util'''
+        if (show_stdout is None):
+            if (hasattr(self, "show_stdout")):
+                show_stdout = self.show_stdout
+            else:
+                show_stdout = False
+
         proc = subprocess.Popen(
             cmd, cwd=self.path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         out, err = proc.communicate()
         proc.wait()
 
-        if (show_stdout):
-            print(out, " ")
+        if (show_stdout and out):
+            debug(out)
 
 
 class GIT(VCS):
@@ -98,14 +108,20 @@ class CVS(VCS):
         self.call_process(["cvs", "update"])
 
 
+def debug(msg, *args, **kwargs):
+    logger = logging.getLogger(__name__)
+    logger.debug(msg, *args, **kwargs)
+
+
 def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     # using argument parser to get path name
     base_path = os.path.dirname(os.path.abspath(__file__))
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", default=base_path)
+    parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
     base_path = os.path.abspath(args.path)
@@ -123,18 +139,20 @@ def main():
         vcs = None
 
         if (os.path.isdir(git_path)):
-            logger.info("[GIT] %s" % git_path)
+            debug("[GIT] %s" % git_path)
             vcs = GIT(git_path)
         elif (os.path.isdir(svn_path)):
-            logger.info("[SVN] %s" % svn_path)
+            debug("[SVN] %s" % svn_path)
             vcs = SVN(svn_path)
         elif (os.path.isdir(cvs_path)):
-            logger.info("[CVS] %s" % cvs_path)
+            debug("[CVS] %s" % cvs_path)
             vcs = CVS(cvs_path)
         else:
-            logger.info("[---] %s" % cur_path)
+            debug("[---] %s" % cur_path)
 
         if (isinstance(vcs, VCS)):
+            if (args.verbose):
+                vcs.verbose()
             vcs.update()
             vcs.clean()
 
