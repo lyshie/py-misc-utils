@@ -97,10 +97,15 @@ def main():
     parser.add_argument("-t", "--type", type=str, default="hourly")
     parser.add_argument("-n", "--number", type=int, default=0)
     parser.add_argument("--table", type=str, default="ALL")
+    parser.add_argument("-p", "--path", type=str)
     args = parser.parse_args()
 
     # filename => /tmp/mysqldump_20150129_211037.lzo'
-    path = "/tmp"
+    if not os.path.isdir(args.path):
+        logger.error("Path not found: %s" % (args.path))
+        raise Exception("Path not found: %s" % (args.path))
+
+    path = args.path
     suffix = time.strftime("%Y%m%d_%H%M%S")
     filename = "%s_%s_mysqldump_%s.lzo" % (args.type, args.table, suffix)
     pattern = re.compile(
@@ -114,6 +119,8 @@ def main():
         unlinked_files = rotate(path, pattern, number=args.number)
         for f in unlinked_files:
             logger.info("Unlink file: %s" % (f))
+    else:
+        logger.error("Failed to backup file.")
 
 if __name__ == '__main__':
     main()
